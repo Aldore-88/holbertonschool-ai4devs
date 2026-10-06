@@ -1,31 +1,31 @@
 # Bug Descriptions
 
 ## Bug 1 – bug1.py
-**Intended Behavior**: Compute each student's average score and print it to one decimal place with a letter grade (A ≥ 90, B ≥ 80, C ≥ 70, D ≥ 60, otherwise F).  
+**Intended Behavior**: Calculate each student's average score and print it to one decimal place with a letter grade (A ≥ 90, B ≥ 80, C ≥ 70, D ≥ 60, otherwise F), e.g. `Alice: 91.7 (A)`.  
 **Issue Type**: Syntax error.  
-**Notes**: The script does not run at all; Python raises a `SyntaxError` before executing any code.
+**Notes**: The script fails to parse, so no code runs at all.
 
 ## Bug 2 – bug2.js
-**Intended Behavior**: Return a cart's total after applying a discount code (`SAVE10` = 10% off, `SAVE20` = 20% off) and then 8% tax, rounded to cents. Carts of $100 or more with no code get `SAVE10` automatically.  
+**Intended Behavior**: Return a cart's final price: the subtotal, minus the discount for the code (`SAVE10` = 10% off, `SAVE20` = 20% off, no code = no discount, but carts of $100 or more get `SAVE10` automatically), plus 8% tax on the discounted amount, rounded to cents.  
 **Issue Type**: Logical error.  
-**Notes**: The program runs without errors but prints wrong totals ($21.6, $0, $0 instead of $86.4, $97.2, $10.8). A $100 cart with no code does not receive the automatic discount.
+**Notes**: The script runs without errors but prints wrong totals, and a cart of exactly $100 does not get the automatic discount.
 
 ## Bug 3 – bug3.py
-**Intended Behavior**: Print each inventory item's average sale price (0.00 if it has no sales), then print the total stock per warehouse. Records missing a `stock` field count as 0 units.  
+**Intended Behavior**: Print every item's average sale price, showing 0.00 for items with no sales, then print each warehouse's total stock, counting a record with no `stock` field as 0 units.  
 **Issue Type**: Runtime exception.  
-**Notes**: Crashes partway through the inventory on an item with no sales, and again on a record that has no `stock` field.
+**Notes**: The program crashes on an item with an empty sales list or a record with no `stock` field.
 
 ## Bug 4 – bug4.ts
-**Intended Behavior**: `paginate` splits a list into pages of at most `pageSize` items, keeping every item. `movingAverage` returns the average of each consecutive window of `windowSize` values (`n - windowSize + 1` results).  
+**Intended Behavior**: `paginate` splits a list into pages of at most `pageSize` items, and every item appears exactly once. `movingAverage` returns the average of each consecutive window of `windowSize` values, giving `n - windowSize + 1` results.  
 **Issue Type**: Off-by-one / loop logic error.  
-**Notes**: The last user ("gus") is missing from the pages. The moving averages are too high, there is one result too many, and the last one is `NaN`.
+**Notes**: The last item is dropped when it starts a new page, and each averaging window reads one value too many, so the results are wrong and the final one is `NaN`.
 
 ## Bug 5 – bug5.py
-**Intended Behavior**: `add_order` records an order in that customer's own list. `top_orders` returns the n largest amounts, largest first. `parse_amounts` returns the numeric total of a comma-separated price string.  
+**Intended Behavior**: `add_order` adds an amount to that customer's own order list. `top_orders` returns the n largest amounts, largest first. `parse_amounts` returns the numeric sum of a comma-separated price string such as `"19.99,5.50,12"`.  
 **Issue Type**: Misuse of data types / library.  
-**Notes**: Bob's order list also contains Alice's orders. `top_orders` raises `TypeError: 'NoneType' object is not subscriptable`. `parse_amounts` fails because it tries to add strings to an integer.
+**Notes**: Different customers end up sharing one order list, `top_orders` raises a `TypeError`, and `parse_amounts` fails when it adds text to a number.
 
 ## Bug 6 – bug6.js
-**Intended Behavior**: Convert form input strings to integers, total them, sort them in ascending numeric order, and flag quantities below 5 as low stock (an empty value `''` is "no data", not low stock).  
+**Intended Behavior**: Convert form input strings to integers, return their numeric total, sort the quantities from smallest to largest, and report a quantity as low stock only if it is below 5. An empty value `''` means no data and is not low stock.  
 **Issue Type**: Misuse of data types / library.  
-**Notes**: Parsing gives `[10, NaN, 1, NaN]`, the total becomes the string `"0107123"`, the sort gives `[10, 100, 12, 3, 7]`, and `isLowStock('')` returns `true`.
+**Notes**: Parsing returns `NaN` values, the total joins the strings together instead of adding them, the sort orders numbers like text, and `''` is reported as low stock.
