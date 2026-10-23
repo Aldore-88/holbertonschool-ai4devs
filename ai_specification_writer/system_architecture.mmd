@@ -1,0 +1,18 @@
+graph TD
+  A[Mobile App] --> B[API Gateway]
+  W[Web App] --> B
+  B --> C[Auth Service]
+  B --> D[Goal Calculation Service]
+  B --> E[Food Database Service]
+  B --> F[Diary Service]
+  B --> G[Integration Service]
+  B --> H[Notification Service]
+  C --> I[(User DB)]
+  D --> I
+  E --> J[(Food DB)]
+  F --> K[(Diary DB)]
+  F --> E
+  F --> D
+  G --> F
+  G --> L[Wearables: Apple Health, Google Fit, Fitbit, Garmin]
+  H --> M[Push / Email Provider]
