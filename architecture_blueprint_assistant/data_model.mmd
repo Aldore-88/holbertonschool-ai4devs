@@ -1,0 +1,11 @@
+erDiagram
+  USER ||--o{ GROUP : creates
+  USER ||--o{ MEMBERSHIP : joins
+  GROUP ||--|{ MEMBERSHIP : includes
+  GROUP ||--o{ GUEST : invites
+  GROUP ||--o{ ALBUM : owns
+  ALBUM ||--o{ PHOTO : contains
+  USER ||--o{ PHOTO : uploads
+  GUEST ||--o{ PHOTO : uploads
+  GROUP ||--|| SUBSCRIPTION : has
+  SUBSCRIPTION ||--o{ PAYMENT : records
