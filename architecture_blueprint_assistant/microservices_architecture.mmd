@@ -6,15 +6,11 @@ graph TD
   A --> F[Billing Service]
   A --> G[Notification Service]
   A --> H[Analytics Service]
-  C --> F
-  D --> C
-  E --> D
   E --> I[Image Processing Service]
-  I --> J[Photo Storage]
+  E --> D
+  D --> C
+  C --> F
   D --> G
   F --> G
-  B --> K[Database per Service]
-  C --> K
-  D --> K
-  E --> K
-  F --> K
+  I --> J[Photo Storage]
+  A --> K[Database per Service]
