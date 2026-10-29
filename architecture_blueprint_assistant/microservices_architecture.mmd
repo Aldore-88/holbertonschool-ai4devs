@@ -6,8 +6,12 @@ graph TD
   A --> F[Billing Service]
   A --> G[Notification Service]
   A --> H[Analytics Service]
+  A --> L[Event Service]
   E --> I[Image Processing Service]
   E --> D
+  D --> L
+  L --> C
+  L --> G
   D --> C
   C --> F
   D --> G

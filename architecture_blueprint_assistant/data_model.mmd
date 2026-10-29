@@ -3,7 +3,8 @@ erDiagram
   USER ||--o{ MEMBERSHIP : joins
   GROUP ||--|{ MEMBERSHIP : includes
   GROUP ||--o{ GUEST : invites
-  GROUP ||--o{ ALBUM : owns
+  GROUP ||--o{ EVENT : schedules
+  EVENT ||--|| ALBUM : has
   ALBUM ||--o{ PHOTO : contains
   USER ||--o{ PHOTO : uploads
   GUEST ||--o{ PHOTO : uploads

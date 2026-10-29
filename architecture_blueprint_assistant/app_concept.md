@@ -5,12 +5,14 @@ Collaborative event photo album for groups, members and guests.
 
 ## Core Features
 - Shared event albums with invite links and QR codes
+- Scheduled events: the album opens instantly when the app is opened during event times
 - Guest uploads without an account
 - Quick filters and edits while uploading
 - Real-time album feed with reactions and comments
 - Creator settings: group size, album size, photos per person
 - Easy member growth with in-app plan upgrades
 - Freemium monetization: free tier with a set photo limit, paid tiers by group and album size
+- Dark mode by default
 
 ## Users
 - Group Owners: create groups, set limits, manage billing
