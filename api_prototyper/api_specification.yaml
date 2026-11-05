@@ -1,0 +1,1032 @@
+openapi: 3.0.3
+info:
+  title: SnapCircle API
+  version: 1.0.0
+  description: >
+    Collaborative event photo album API. Group owners create groups and
+    scheduled events, members and guests upload photos to shared albums.
+    All endpoints require a JWT bearer token unless marked otherwise.
+    Guests receive a scoped, time-limited JWT through the guest join endpoint.
+servers:
+  - url: https://api.snapcircle.app/api/v1
+security:
+  - bearerAuth: []
+tags:
+  - name: Auth
+  - name: Groups
+  - name: Events
+  - name: Albums
+  - name: Photos
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register a user account
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in and receive a JWT
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /auth/guest:
+    post:
+      tags: [Auth]
+      summary: Join a group as a guest with an invite code
+      description: Returns a JWT scoped to one group that expires after the event.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GuestJoinRequest'
+      responses:
+        '201':
+          description: Guest joined
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthToken'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/LimitReached'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /groups:
+    get:
+      tags: [Groups]
+      summary: List groups the current user belongs to
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GroupList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    post:
+      tags: [Groups]
+      summary: Create a group
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInput'
+      responses:
+        '201':
+          description: Group created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /groups/{groupId}:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      tags: [Groups]
+      summary: Get a group by ID
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Groups]
+      summary: Update a group (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GroupInput'
+      responses:
+        '200':
+          description: Group updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Group'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/LimitReached'
+    delete:
+      tags: [Groups]
+      summary: Delete a group (owner only)
+      responses:
+        '204':
+          description: Group deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /groups/{groupId}/invite-code:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    post:
+      tags: [Groups]
+      summary: Regenerate the group invite code (owner only)
+      responses:
+        '200':
+          description: New invite code issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InviteCode'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Groups]
+      summary: Disable the group invite code (owner only)
+      responses:
+        '204':
+          description: Invite code disabled
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /groups/{groupId}/events:
+    parameters:
+      - $ref: '#/components/parameters/GroupId'
+    get:
+      tags: [Events]
+      summary: List events in a group
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EventList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Events]
+      summary: Create an event in a group (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventInput'
+      responses:
+        '201':
+          description: Event created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /events/live:
+    get:
+      tags: [Events]
+      summary: Get the event happening now for the current user or guest
+      description: Used on app launch to open the live album directly.
+      responses:
+        '200':
+          description: Live event found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '204':
+          description: No event is live right now
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /events/{eventId}:
+    parameters:
+      - $ref: '#/components/parameters/EventId'
+    get:
+      tags: [Events]
+      summary: Get an event by ID
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Events]
+      summary: Update an event (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EventInput'
+      responses:
+        '200':
+          description: Event updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Event'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Events]
+      summary: Delete an event and its album (owner only)
+      responses:
+        '204':
+          description: Event deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /events/{eventId}/album:
+    parameters:
+      - $ref: '#/components/parameters/EventId'
+    post:
+      tags: [Albums]
+      summary: Create the album for an event (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlbumInput'
+      responses:
+        '201':
+          description: Album created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/LimitReached'
+  /albums/{albumId}:
+    parameters:
+      - $ref: '#/components/parameters/AlbumId'
+    get:
+      tags: [Albums]
+      summary: Get an album by ID, including remaining photo counts
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Albums]
+      summary: Update album settings and limits (owner only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AlbumInput'
+      responses:
+        '200':
+          description: Album updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Album'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/LimitReached'
+  /albums/{albumId}/photos:
+    parameters:
+      - $ref: '#/components/parameters/AlbumId'
+    get:
+      tags: [Photos]
+      summary: List photos in an album, newest first
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PhotoList'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [Photos]
+      summary: Upload a photo with an optional filter and edits
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PhotoUpload'
+      responses:
+        '202':
+          description: Upload accepted, processing in the background
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '413':
+          $ref: '#/components/responses/PayloadTooLarge'
+        '422':
+          $ref: '#/components/responses/LimitReached'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /albums/{albumId}/download:
+    parameters:
+      - $ref: '#/components/parameters/AlbumId'
+    get:
+      tags: [Albums]
+      summary: Download the whole album as a ZIP file
+      responses:
+        '200':
+          description: ZIP archive of original photos
+          content:
+            application/zip:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /photos/{photoId}:
+    parameters:
+      - $ref: '#/components/parameters/PhotoId'
+    get:
+      tags: [Photos]
+      summary: Get a photo by ID
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Photos]
+      summary: Change the filter or edits on a photo (uploader only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PhotoEdit'
+      responses:
+        '200':
+          description: Photo updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Photo'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Photos]
+      summary: Delete a photo (uploader, group owner or admin)
+      responses:
+        '204':
+          description: Photo deleted
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    Page:
+      in: query
+      name: page
+      description: Page number, starting at 1
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    Limit:
+      in: query
+      name: limit
+      description: Items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 10
+    GroupId:
+      in: path
+      name: groupId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    EventId:
+      in: path
+      name: eventId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    AlbumId:
+      in: path
+      name: albumId
+      required: true
+      schema:
+        type: string
+        format: uuid
+    PhotoId:
+      in: path
+      name: photoId
+      required: true
+      schema:
+        type: string
+        format: uuid
+  responses:
+    BadRequest:
+      description: Request failed validation
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: VALIDATION_ERROR
+              message: Request body is invalid
+              details:
+                - field: ends_at
+                  issue: must be after starts_at
+    Unauthorized:
+      description: Missing, invalid or expired JWT
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: UNAUTHORIZED
+              message: Token is missing or expired
+    Forbidden:
+      description: Authenticated but not allowed to perform this action
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: FORBIDDEN
+              message: Only the group owner can do this
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: NOT_FOUND
+              message: Album not found
+    Conflict:
+      description: Resource already exists
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: CONFLICT
+              message: Email is already registered
+    PayloadTooLarge:
+      description: Photo file exceeds 25 MB
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: PAYLOAD_TOO_LARGE
+              message: Photo must be 25 MB or smaller
+    LimitReached:
+      description: Plan, group or album limit reached
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: LIMIT_REACHED
+              message: You have used 10 of 10 photos for this album
+              details:
+                - field: max_photos_per_person
+                  issue: limit reached, 0 remaining
+    TooManyRequests:
+      description: Rate limit exceeded
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying
+          schema:
+            type: integer
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: RATE_LIMITED
+              message: Too many requests, try again later
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                - VALIDATION_ERROR
+                - UNAUTHORIZED
+                - FORBIDDEN
+                - NOT_FOUND
+                - CONFLICT
+                - PAYLOAD_TOO_LARGE
+                - LIMIT_REACHED
+                - RATE_LIMITED
+                - INTERNAL_ERROR
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  issue:
+                    type: string
+    PaginationMeta:
+      type: object
+      required: [page, limit, total_items, total_pages]
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 10
+        total_items:
+          type: integer
+          example: 42
+        total_pages:
+          type: integer
+          example: 5
+    RegisterRequest:
+      type: object
+      required: [name, email, password]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+          minLength: 8
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    GuestJoinRequest:
+      type: object
+      required: [invite_code, display_name]
+      properties:
+        invite_code:
+          type: string
+        display_name:
+          type: string
+          minLength: 1
+          maxLength: 50
+    AuthToken:
+      type: object
+      required: [access_token, token_type, expires_in]
+      properties:
+        access_token:
+          type: string
+          description: 'JWT to send in the header "Authorization: Bearer <token>"'
+        token_type:
+          type: string
+          enum: [Bearer]
+        expires_in:
+          type: integer
+          description: Seconds until the token expires
+        role:
+          type: string
+          enum: [member, guest, admin]
+    GroupInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        max_members:
+          type: integer
+          minimum: 1
+          description: Cannot exceed the subscription member_limit
+    Group:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        creator_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        max_members:
+          type: integer
+        member_count:
+          type: integer
+        invite_code:
+          type: string
+          nullable: true
+          description: Only shown to the owner; null when disabled
+        plan:
+          type: string
+          enum: [free, plus, pro]
+        created_at:
+          type: string
+          format: date-time
+    GroupList:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Group'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    InviteCode:
+      type: object
+      properties:
+        invite_code:
+          type: string
+        invite_url:
+          type: string
+          format: uri
+        qr_code_url:
+          type: string
+          format: uri
+    EventInput:
+      type: object
+      required: [name, starts_at, ends_at, timezone]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+          description: Must be after starts_at
+        timezone:
+          type: string
+          description: IANA time zone
+          example: Australia/Sydney
+        location:
+          type: string
+          maxLength: 200
+    Event:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        group_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        timezone:
+          type: string
+        location:
+          type: string
+        album_id:
+          type: string
+          format: uuid
+          nullable: true
+    EventList:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Event'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+    AlbumInput:
+      type: object
+      required: [title, max_photos, max_photos_per_person]
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+        max_photos:
+          type: integer
+          minimum: 1
+          description: Cannot exceed the subscription photo_limit
+        max_photos_per_person:
+          type: integer
+          minimum: 1
+          description: Must be less than or equal to max_photos
+        privacy:
+          type: string
+          enum: [group, link]
+          default: group
+    Album:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        event_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        max_photos:
+          type: integer
+        max_photos_per_person:
+          type: integer
+        privacy:
+          type: string
+          enum: [group, link]
+        photo_count:
+          type: integer
+        my_remaining_photos:
+          type: integer
+          description: Photos the caller can still upload
+    PhotoUpload:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+          format: binary
+          description: JPEG, PNG, HEIC or WebP, 25 MB maximum
+        filter:
+          $ref: '#/components/schemas/Filter'
+        rotation:
+          type: integer
+          enum: [0, 90, 180, 270]
+          default: 0
+        crop:
+          $ref: '#/components/schemas/Crop'
+    PhotoEdit:
+      type: object
+      properties:
+        filter:
+          $ref: '#/components/schemas/Filter'
+        rotation:
+          type: integer
+          enum: [0, 90, 180, 270]
+        crop:
+          $ref: '#/components/schemas/Crop'
+    Filter:
+      type: string
+      enum: [none, vivid, warm, cool, mono, vintage]
+      default: none
+    Crop:
+      type: object
+      required: [x, y, width, height]
+      description: Crop box as fractions of the image size (0 to 1)
+      properties:
+        x:
+          type: number
+          minimum: 0
+          maximum: 1
+        y:
+          type: number
+          minimum: 0
+          maximum: 1
+        width:
+          type: number
+          minimum: 0
+          maximum: 1
+        height:
+          type: number
+          minimum: 0
+          maximum: 1
+    Photo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        album_id:
+          type: string
+          format: uuid
+        uploader_user_id:
+          type: string
+          format: uuid
+          nullable: true
+        uploader_guest_id:
+          type: string
+          format: uuid
+          nullable: true
+        storage_url:
+          type: string
+          format: uri
+        thumbnail_url:
+          type: string
+          format: uri
+        filter:
+          $ref: '#/components/schemas/Filter'
+        status:
+          type: string
+          enum: [processing, ready, failed]
+        uploaded_at:
+          type: string
+          format: date-time
+    PhotoList:
+      type: object
+      required: [data, meta]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Photo'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
