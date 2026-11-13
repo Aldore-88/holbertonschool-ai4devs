@@ -6,7 +6,7 @@
 - **Supporting extensions:** Prettier, ESLint
 
 ## Configuration File
-The AI settings are stored in [`.copilot-settings.yaml`](.copilot-settings.yaml) at the project root.
+The AI settings are stored in [`settings.json`](settings.json) at the project root.
 It has two parts: rules for each language and specialized AI workflows.
 
 ## Language-Specific Rules
@@ -40,7 +40,7 @@ It has two parts: rules for each language and specialized AI workflows.
 1. Install VS Code and the Claude Code extension.
 2. Sign in to Claude Code from the extension panel.
 3. Install the Prettier and ESLint extensions.
-4. Put `.copilot-settings.yaml` in the project root.
+4. Put `settings.json` in the project root.
 5. Install the Python tools: `pip install black flake8 pytest`.
 6. Install the JavaScript tools: `npm install --save-dev eslint prettier jest eslint-config-airbnb-base`.
 7. Open the project and use the AI workflows from the Claude Code panel.
