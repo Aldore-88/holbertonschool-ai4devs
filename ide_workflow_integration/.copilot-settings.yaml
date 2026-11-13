@@ -1,0 +1,33 @@
+languages:
+  python:
+    style_guide: "black"
+    type_hints: true
+    linter: "flake8"
+    max_line_length: 88
+    docstrings: "google"
+    test_framework: "pytest"
+  javascript:
+    style_guide: "airbnb"
+    semicolons: true
+    quotes: "single"
+    linter: "eslint"
+    formatter: "prettier"
+    test_framework: "jest"
+  markdown:
+    line_length: 100
+    heading_style: "atx"
+workflows:
+  code_review:
+    enabled: true
+    focus_areas: ["security", "performance", "readability", "error_handling"]
+    severity_threshold: "medium"
+    suggest_fixes: true
+  doc_generator:
+    enabled: true
+    targets: ["README.md", "docstrings"]
+    trigger: "on_commit"
+    include_examples: true
+  test_generator:
+    enabled: true
+    coverage_target: 80
+    include_edge_cases: true
